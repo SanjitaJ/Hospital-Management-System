@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartCare Hospital Management System</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2d3748;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 1rem 5%;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .logo { display: flex; align-items: center; font-size: 1.5rem; font-weight: 700; color: #4f46e5; gap: 0.5rem; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { text-decoration: none; color: #4a5568; font-weight: 500; padding: 0.5rem 1rem; border-radius: 8px; transition: all 0.3s ease; cursor: pointer; }
+    .nav-links a:hover, .nav-links a.active { color: #4f46e5; background: rgba(79, 70, 229, 0.1); }
+    .page-container { margin-top: 80px; min-height: calc(100vh - 80px); }
+    .page { display: none; padding: 3rem 5%; animation: fadeIn 0.5s ease-in-out; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px; padding: 2rem;
+      box-shadow: 0 20px 40px rgba(31, 38, 135, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      transition: all 0.3s ease; margin-bottom: 2rem;
+    }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 30px 60px rgba(31, 38, 135, 0.15); }
+    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem; }
+    .dashboard-card {
+      background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+      border-radius: 16px; padding: 2rem; text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease; cursor: pointer;
+    }
+    .dashboard-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+    .dashboard-card .icon { font-size: 3rem; color: #4f46e5; margin-bottom: 1rem; display: block; }
+    .dashboard-card h3 { color: #2d3748; font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 600; }
+    .dashboard-card p { color: #718096; font-size: 0.9rem; line-height: 1.5; }
+    .form-container { max-width: 600px; margin: 0 auto; }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #4a5568; }
+    .form-input {
+      width: 100%; padding: 1rem; border: 2px solid rgba(79, 70, 229, 0.1); border-radius: 12px; font-size: 1rem;
+      transition: all 0.3s ease; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+    }
+    .form-input:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem;
+    }
+    .btn {
+      padding: 1rem 2rem; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;
+    }
+    .btn-primary { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4); }
+    .btn-secondary { background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 2px solid rgba(239, 68, 68, 0.2); }
+    .btn-secondary:hover { background: #dc2626; color: white; }
+    .btn-icon { padding: 0.5rem 0.75rem; border-radius: 10px; font-size: 0.9rem; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-outline { background: transparent; border: 2px solid rgba(0,0,0,0.08); color: #374151; }
+    .btn-outline:hover { background: rgba(0,0,0,0.04); }
+    .btn-group { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+    .page-header { text-align: center; margin-bottom: 3rem; }
+    .page-title { font-size: 2.5rem; font-weight: 700; color: white; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .page-subtitle { font-size: 1.1rem; color: rgba(255, 255, 255, 0.8); max-width: 600px; margin: 0 auto; line-height: 1.6; }
+    .status-message { padding: 1rem; border-radius: 12px; margin-top: 1rem; font-weight: 500; text-align: center; display: none; }
+    .status-success { background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .status-error { background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .footer {
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); padding: 2rem 5%; text-align: center; color: #4a5568;
+      font-weight: 500; border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    /* Data lists */
+    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .list-title { font-weight: 700; color: #1f2937; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table {
+      width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+    thead { background: #f3f4f6; color: #374151; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 0.95rem; }
+    tbody tr:hover { background: #f9fafb; }
+    .muted { color: #6b7280; font-size: 0.9rem; }
+    .empty-state {
+      padding: 1.25rem; text-align: center; color: #6b7280; background: #f9fafb; border: 1px dashed #e5e7eb; border-radius: 12px;
+    }
+    @media (max-width: 768px) {
+      .navbar { padding: 1rem 3%; flex-wrap: wrap; }
+      .nav-links { flex-direction: column; width: 100%; margin-top: 1rem; gap: 0.5rem; }
+      .page { padding: 2rem 3%; }
+      .dashboard-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .btn-group { flex-direction: column; }
+      table { font-size: 0.9rem; }
+      th, td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><i class="fas fa-hospital"></i> SmartCare Hospital</div>
+    <ul class="nav-links">
+      <li><a href="#" onclick="navigateToPage('home')" class="nav-link active">Home</a></li>
+      <li><a href="#" onclick="navigateToPage('register')" class="nav-link">Register</a></li>
+      <li><a href="#" onclick="navigateToPage('appointment')" class="nav-link">Appointments</a></li>
+      <li><a href="#" onclick="navigateToPage('billing')" class="nav-link">Billing</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-container">
+    <!-- Home -->
+    <div id="home" class="page active">
+      <div class="page-header">
+        <h1 class="page-title">Welcome to SmartCare Hospital</h1>
+        <p class="page-subtitle">Experience modern healthcare management with our comprehensive digital platform designed for patients, doctors, and administrative staff.</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-card" onclick="navigateToPage('register')">
+          <i class="fas fa-user-plus icon"></i>
+          <h3>Patient Registration</h3>
+          <p>Register new patients and maintain comprehensive medical records with our streamlined registration system.</p>
+        </div>
+        <div class="dashboard-card" onclick="navigateToPage('appointment')">
+          <i class="fas fa-calendar-check icon"></i>
+          <h3>Book Appointments</h3>
+          <p>Schedule appointments with available doctors across various specializations with real-time availability.</p>
+        </div>
+        <div class="dashboard-card" onclick="navigateToPage('billing')">
+          <i class="fas fa-credit-card icon"></i>
+          <h3>Billing & Payments</h3>
+          <p>Process payments securely and manage billing operations with automated invoicing and refund processing.</p>
+        </div>
+        <div class="dashboard-card" onclick="showFeature('analytics')">
+          <i class="fas fa-chart-line icon"></i>
+          <h3>Analytics Dashboard</h3>
+          <p>Monitor hospital performance metrics and generate comprehensive reports for better decision making.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Register -->
+    <div id="register" class="page">
+      <div class="page-header">
+        <h1 class="page-title">Patient Registration</h1>
+        <p class="page-subtitle">Register new patients with comprehensive medical information and contact details.</p>
+      </div>
+
+      <div class="card">
+        <div class="form-container">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" id="patientName" class="form-input" placeholder="Enter patient's full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age *</label>
+            <input type="number" id="patientAge" class="form-input" placeholder="Enter age" min="1" max="150" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gender *</label>
+            <select id="patientGender" class="form-input form-select" required>
+              <option value="" disabled selected>Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Disease/Symptoms *</label>
+            <input type="text" id="patientDisease" class="form-input" placeholder="Describe symptoms or medical condition" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="patientPhone" class="form-input" placeholder="Enter contact number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emergency Contact</label>
+            <input type="text" id="emergencyContact" class="form-input" placeholder="Emergency contact name and number">
+          </div>
+
+          <button class="btn btn-primary" onclick="registerPatient()">
+            <i class="fas fa-user-plus"></i>
+            Register Patient
+          </button>
+
+          <div id="registerMsg" class="status-message"></div>
+        </div>
+      </div>
+
+      <!-- Patients list -->
+      <div class="card">
+        <div class="list-header">
+          <div class="list-title">Registered Patients</div>
+          <div class="muted" id="patientsCount">0 total</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Age/Gender</th>
+                <th>Disease</th>
+                <th>Phone</th>
+                <th>Emergency</th>
+                <th>Registered</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="patientsTableBody">
+              <tr><td colspan="8"><div class="empty-state">No patients yet. Add a patient to see it here.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment -->
+    <div id="appointment" class="page">
+      <div class="page-header">
+        <h1 class="page-title">Book Appointment</h1>
+        <p class="page-subtitle">Schedule appointments with our experienced medical professionals across various specializations.</p>
+      </div>
+
+      <div class="card">
+        <div class="form-container">
+          <div class="form-group">
+            <label class="form-label">Patient Name *</label>
+            <input type="text" id="appointName" class="form-input" placeholder="Enter patient name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Doctor *</label>
+            <select id="doctor" class="form-input form-select" required>
+              <option value="" disabled selected>Choose a specialist</option>
+              <option value="Dr. Sharma - Cardiologist">Dr. Sharma - Cardiologist</option>
+              <option value="Dr. Mehta - Dermatologist">Dr. Mehta - Dermatologist</option>
+              <option value="Dr. Gupta - Neurologist">Dr. Gupta - Neurologist</option>
+              <option value="Dr. Rani - Pediatrician">Dr. Rani - Pediatrician</option>
+              <option value="Dr. Singh - Orthopedic">Dr. Singh - Orthopedic</option>
+              <option value="Dr. Patel - General Medicine">Dr. Patel - General Medicine</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Appointment Date *</label>
+            <input type="date" id="appointDate" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Time</label>
+            <select id="appointTime" class="form-input form-select">
+              <option value="" disabled selected>Select time slot</option>
+              <option value="09:00 AM">09:00 AM</option>
+              <option value="10:00 AM">10:00 AM</option>
+              <option value="11:00 AM">11:00 AM</option>
+              <option value="02:00 PM">02:00 PM</option>
+              <option value="03:00 PM">03:00 PM</option>
+              <option value="04:00 PM">04:00 PM</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reason for Visit</label>
+            <input type="text" id="appointReason" class="form-input" placeholder="Brief description of medical concern">
+          </div>
+
+          <button class="btn btn-primary" onclick="bookAppointment()">
+            <i class="fas fa-calendar-plus"></i>
+            Book Appointment
+          </button>
+
+          <div id="appointMsg" class="status-message"></div>
+        </div>
+      </div>
+
+      <!-- Appointments list -->
+      <div class="card">
+        <div class="list-header">
+          <div class="list-title">Appointments</div>
+          <div class="muted" id="appointmentsCount">0 total</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="appointmentsTableBody">
+              <tr><td colspan="8"><div class="empty-state">No appointments yet. Book one to see it here.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing -->
+    <div id="billing" class="page">
+      <div class="page-header">
+        <h1 class="page-title">Billing & Payments</h1>
+        <p class="page-subtitle">Process secure payments and manage billing operations with our integrated payment system.</p>
+      </div>
+
+      <div class="card">
+        <div class="form-container">
+          <div class="form-group">
+            <label class="form-label">Patient Name *</label>
+            <input type="text" id="billName" class="form-input" placeholder="Enter patient name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Service Type</label>
+            <select id="serviceType" class="form-input form-select">
+              <option value="" disabled selected>Select service</option>
+              <option value="Consultation">Consultation Fee</option>
+              <option value="Laboratory">Laboratory Tests</option>
+              <option value="Radiology">Radiology Services</option>
+              <option value="Pharmacy">Pharmacy</option>
+              <option value="Emergency">Emergency Services</option>
+              <option value="Surgery">Surgical Procedures</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount (₹) *</label>
+            <input type="number" id="billAmount" class="form-input" placeholder="Enter amount" min="1" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Method</label>
+            <select id="paymentMethod" class="form-input form-select">
+              <option value="" disabled selected>Select payment method</option>
+              <option value="Cash">Cash</option>
+              <option value="Card">Credit/Debit Card</option>
+              <option value="UPI">UPI Payment</option>
+              <option value="Insurance">Insurance</option>
+            </select>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="makePayment()">
+              <i class="fas fa-credit-card"></i>
+              Process Payment
+            </button>
+            <button class="btn btn-secondary" onclick="cancelPayment()">
+              <i class="fas fa-times"></i>
+              Cancel & Refund
+            </button>
+          </div>
+
+          <div id="paymentMsg" class="status-message"></div>
+        </div>
+      </div>
+
+      <!-- Payments list -->
+      <div class="card">
+        <div class="list-header">
+          <div class="list-title">Payments</div>
+          <div class="muted" id="paymentsCount">0 total</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Patient</th>
+                <th>Service</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Date</th>
+                <th>Txn ID</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+              <tr><td colspan="8"><div class="empty-state">No payments yet. Process one to see it here.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 SmartCare Hospital Management System | Designed with <i class="fas fa-heart" style="color: #e53e3e;"></i> by Rishita Raj</p>
+  </footer>
+
+  <script>
+    // Data Stores
+    const patients = [];
+    const appointments = [];
+    const payments = []; // changed to array of objects for listing
+
+    // Navigation
+    function navigateToPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      event.target.classList.add('active');
+      clearStatusMessages();
+      // Refresh visible tables on navigation
+      renderPatients();
+      renderAppointments();
+      renderPayments();
+    }
+
+    // Utilities
+    function clearForm(formType) {
+      const forms = {
+        register: ['patientName', 'patientAge', 'patientGender', 'patientDisease', 'patientPhone', 'emergencyContact'],
+        appointment: ['appointName', 'doctor', 'appointDate', 'appointTime', 'appointReason'],
+        billing: ['billName', 'serviceType', 'billAmount', 'paymentMethod']
+      };
+      if (forms[formType]) {
+        forms[formType].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      }
+    }
+    function clearStatusMessages() {
+      document.querySelectorAll('.status-message').forEach(msg => { msg.style.display = 'none'; msg.textContent = ''; });
+    }
+    function showMessage(elementId, message, type = 'success') {
+      const el = document.getElementById(elementId);
+      el.textContent = message;
+      el.className = status-message status-${type};
+      el.style.display = 'block';
+      if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+    function validateRequired(ids) {
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el || !el.value.trim()) return false;
+      }
+      return true;
+    }
+
+    // Rendering helpers
+    function renderPatients() {
+      const tbody = document.getElementById('patientsTableBody');
+      const count = document.getElementById('patientsCount');
+      if (patients.length === 0) {
+        tbody.innerHTML = <tr><td colspan="8"><div class="empty-state">No patients yet. Add a patient to see it here.</div></td></tr>;
+        count.textContent = '0 total';
+        return;
+      }
+      tbody.innerHTML = patients.map((p, i) => `
+        <tr data-id="${p.id}">
+          <td>${i + 1}</td>
+          <td>${p.name}</td>
+          <td>${p.age} / ${p.gender}</td>
+          <td>${p.disease}</td>
+          <td>${p.phone || '-'}</td>
+          <td>${p.emergencyContact || '-'}</td>
+          <td>${p.registrationDate}</td>
+          <td>
+            <button class="btn btn-icon btn-outline" title="View" onclick="viewPatient('${p.id}')"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-icon btn-danger" title="Delete" onclick="deletePatient('${p.id}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      count.textContent = ${patients.length} total;
+    }
+    function renderAppointments() {
+      const tbody = document.getElementById('appointmentsTableBody');
+      const count = document.getElementById('appointmentsCount');
+      if (appointments.length === 0) {
+        tbody.innerHTML = <tr><td colspan="8"><div class="empty-state">No appointments yet. Book one to see it here.</div></td></tr>;
+        count.textContent = '0 total';
+        return;
+      }
+      tbody.innerHTML = appointments.map((a, i) => `
+        <tr data-id="${a.id}">
+          <td>${i + 1}</td>
+          <td>${a.patientName}</td>
+          <td>${a.doctor}</td>
+          <td>${a.date}</td>
+          <td>${a.time || '-'}</td>
+          <td>${a.reason || '-'}</td>
+          <td>${a.status}</td>
+          <td>
+            <button class="btn btn-icon btn-outline" title="Mark Done" onclick="completeAppointment('${a.id}')"><i class="fas fa-check"></i></button>
+            <button class="btn btn-icon btn-danger" title="Delete" onclick="deleteAppointment('${a.id}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      count.textContent = ${appointments.length} total;
+    }
+    function renderPayments() {
+      const tbody = document.getElementById('paymentsTableBody');
+      const count = document.getElementById('paymentsCount');
+      if (payments.length === 0) {
+        tbody.innerHTML = <tr><td colspan="8"><div class="empty-state">No payments yet. Process one to see it here.</div></td></tr>;
+        count.textContent = '0 total';
+        return;
+      }
+      tbody.innerHTML = payments.map((p, i) => `
+        <tr data-id="${p.id}">
+          <td>${i + 1}</td>
+          <td>${p.patientName}</td>
+          <td>${p.serviceType}</td>
+          <td>₹${p.amount.toLocaleString()}</td>
+          <td>${p.paymentMethod}</td>
+          <td>${p.transactionDate}</td>
+          <td>${p.transactionId}</td>
+          <td>
+            <button class="btn btn-icon btn-outline" title="Refund" onclick="refundPayment('${p.id}')"><i class="fas fa-rotate-left"></i></button>
+            <button class="btn btn-icon btn-danger" title="Delete" onclick="deletePayment('${p.id}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      count.textContent = ${payments.length} total;
+    }
+
+    // CRUD actions
+    function registerPatient() {
+      const required = ['patientName','patientAge','patientGender','patientDisease'];
+      if (!validateRequired(required)) { showMessage('registerMsg','Please fill all required fields!','error'); return; }
+      const age = parseInt(document.getElementById('patientAge').value, 10);
+      if (age < 1 || age > 150) { showMessage('registerMsg','Please enter a valid age (1-150)!','error'); return; }
+      const patientData = {
+        id: 'PAT_' + cryptoRandom(),
+        name: document.getElementById('patientName').value.trim(),
+        age,
+        gender: document.getElementById('patientGender').value,
+        disease: document.getElementById('patientDisease').value.trim(),
+        phone: document.getElementById('patientPhone').value.trim(),
+        emergencyContact: document.getElementById('emergencyContact').value.trim(),
+        registrationDate: new Date().toLocaleDateString()
+      };
+      patients.push(patientData);
+      showMessage('registerMsg', ✅ ${patientData.name} has been successfully registered! Registration ID: ${patients.length}, 'success');
+      clearForm('register');
+      renderPatients(); // live update
+    }
+    function deletePatient(id) {
+      const idx = patients.findIndex(p => p.id === id);
+      if (idx !== -1) {
+        patients.splice(idx, 1);
+        renderPatients(); // re-render list
+      }
+    }
+    function viewPatient(id) {
+      const p = patients.find(x => x.id === id);
+      if (!p) return;
+      alert(Patient:\n${p.name}\nAge: ${p.age} | ${p.gender}\nDisease: ${p.disease}\nPhone: ${p.phone || '-'}\nEmergency: ${p.emergencyContact || '-'});
+    }
+
+    function bookAppointment() {
+      const required = ['appointName','doctor','appointDate'];
+      if (!validateRequired(required)) { showMessage('appointMsg','Please complete all required fields!','error'); return; }
+      const selDate = new Date(document.getElementById('appointDate').value);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (selDate < today) { showMessage('appointMsg','Please select a future date!','error'); return; }
+      const appointmentData = {
+        id: 'APT_' + cryptoRandom(),
+        patientName: document.getElementById('appointName').value.trim(),
+        doctor: document.getElementById('doctor').value,
+        date: document.getElementById('appointDate').value,
+        time: document.getElementById('appointTime').value || 'Not specified',
+        reason: document.getElementById('appointReason').value.trim() || 'General consultation',
+        bookingDate: new Date().toLocaleDateString(),
+        status: 'Confirmed'
+      };
+      appointments.push(appointmentData);
+      const timeText = appointmentData.time !== 'Not specified' ? ` at ${appointmentData.time}` : '';
+      showMessage('appointMsg', 📅 Appointment confirmed for ${appointmentData.patientName} with ${appointmentData.doctor} on ${appointmentData.date}${timeText}, 'success');
+      clearForm('appointment');
+      renderAppointments();
+    }
+    function completeAppointment(id) {
+      const ap = appointments.find(a => a.id === id);
+      if (ap) {
+        ap.status = 'Completed';
+        renderAppointments();
+      }
+    }
+    function deleteAppointment(id) {
+      const idx = appointments.findIndex(a => a.id === id);
+      if (idx !== -1) {
+        appointments.splice(idx, 1);
+        renderAppointments();
+      }
+    }
+
+    function makePayment() {
+      const required = ['billName','billAmount'];
+      if (!validateRequired(required)) { showMessage('paymentMsg','Please enter patient name and amount!','error'); return; }
+      const amount = parseFloat(document.getElementById('billAmount').value);
+      if (amount <= 0) { showMessage('paymentMsg','Please enter a valid amount!','error'); return; }
+      const paymentData = {
+        id: 'PAY_' + cryptoRandom(),
+        patientName: document.getElementById('billName').value.trim(),
+        amount: amount,
+        serviceType: document.getElementById('serviceType').value || 'General Service',
+        paymentMethod: document.getElementById('paymentMethod').value || 'Cash',
+        transactionDate: new Date().toLocaleDateString(),
+        transactionId: 'TXN' + Date.now(),
+        status: 'Completed'
+      };
+      payments.push(paymentData);
+      showMessage('paymentMsg', 💰 Payment of ₹${amount} successfully processed for ${paymentData.patientName}. Transaction ID: ${paymentData.transactionId}, 'success');
+      clearForm('billing');
+      renderPayments();
+    }
+    function refundPayment(id) {
+      const p = payments.find(x => x.id === id);
+      if (!p) return;
+      alert(Refund processed for ${p.patientName}\nAmount: ₹${p.amount.toLocaleString()}\nTxn: ${p.transactionId});
+      // In a real system, mark refunded. For demo, remove it.
+      deletePayment(id);
+    }
+    function deletePayment(id) {
+      const idx = payments.findIndex(p => p.id === id);
+      if (idx !== -1) {
+        payments.splice(idx, 1);
+        renderPayments();
+      }
+    }
+
+    // Helpers
+    function cryptoRandom() {
+      // Prefer crypto if available
+      if (window.crypto && window.crypto.getRandomValues) {
+        const arr = new Uint32Array(2);
+        window.crypto.getRandomValues(arr);
+        return arr[0].toString(36) + arr[1].toString(36);
+      }
+      return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', function () {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('appointDate').setAttribute('min', today);
+      renderPatients();
+      renderAppointments();
+      renderPayments();
+      console.log('SmartCare Hospital Management System initialized successfully!');
+    });
+  </script>
+</body>
+</html>
